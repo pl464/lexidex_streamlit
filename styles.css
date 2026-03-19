@@ -1,0 +1,89 @@
+/* ---------- Page width ---------- */
+.block-container {
+    max-width: 95%;
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+/* ---------- Table Row Styling ---------- */
+.lex-row {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    border-radius: 6px;
+    background-color: red;
+}
+
+/* ---------- Sticky Header ---------- */
+.lex-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 100;
+    padding-bottom: 2px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* ---------- Compact Mode ---------- */
+.compact .lex-row {
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
+    font-size: 0.9rem;
+}
+
+/* ---------- Clickable Text ----------
+.word-link button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #2a5bd7;
+    text-align: left;
+} */
+
+.word-link button:hover {
+    text-decoration: underline;
+}
+
+/* ---------- Remove button chrome ---------- */
+button[kind="secondary"] {
+    border: none;
+}
+
+/* ===== WORD_DETAIL =====*/
+.big-text {
+    font-size: 100px;
+    font-weight: 500;
+    text-align: left;
+}
+
+/* This immediate block below prevents cursor transformation (to No Entry) across border/wrapper div around text input fields */
+div[data-testid="stTextInput"] * { 
+    cursor: inherit;
+} 
+div[data-testid="stTextInput"] input:disabled {
+    color: black !important;
+    opacity: 1 !important;
+    -webkit-text-fill-color: black !important;
+}
+div[data-testid="stTextInput"] label {
+    opacity: 1 !important;
+    color: inherit !important;
+}
+div[data-testid="stTextInput"] input:disabled:hover {
+    cursor: default !important;
+}
+/* This immediate block below prevents cursor transformation (to No Entry) across border/wrapper div around text area fields */
+div[data-testid="stTextArea"] * { 
+    cursor: inherit;
+} 
+div[data-testid="stTextArea"] textarea:disabled {
+    color: black !important;
+    opacity: 1 !important;
+    -webkit-text-fill-color: black !important;
+}
+div[data-testid="stTextArea"] label {
+    opacity: 1 !important;
+    color: inherit !important;
+}
+div[data-testid="stTextArea"] textarea:disabled:hover {
+    cursor: default !important;
+}
