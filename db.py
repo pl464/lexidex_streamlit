@@ -387,10 +387,9 @@ def character_count():
     df = conn.query("SELECT COUNT(*) AS count FROM characters", ttl=0)
     return df.iloc[0]["count"]
 
-
 def words_over_time():
     df = conn.query("""
-        SELECT substr(date_first_seen, 1, 10) AS day, COUNT(*) AS count
+        SELECT TO_CHAR(date_first_seen, 'YYYY-MM-DD') AS day, COUNT(*) AS count
         FROM words
         GROUP BY day
         ORDER BY day
@@ -400,7 +399,7 @@ def words_over_time():
 
 def characters_over_time():
     df = conn.query("""
-        SELECT substr(date_added, 1, 10) AS day, COUNT(*) AS count
+        SELECT TO_CHAR(date_added, 'YYYY-MM-DD') AS day, COUNT(*) AS count
         FROM characters
         GROUP BY day
         ORDER BY day
