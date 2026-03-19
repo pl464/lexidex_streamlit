@@ -1,0 +1,13 @@
+[theme]
+base = "light"
+primaryColor = "#ff000080"
+backgroundColor = "#fffbef80" 
+secondaryBackgroundColor = "#dedbd35d"
+
+font = "SN Pro:https://fonts.googleapis.com/css2?family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" # "Nunito:https://fonts.googleapis.com/css2?family=Nunito&display=swap"
+
+dataframeHeaderBackgroundColor = "#dbd7cda2"
+
+[theme.sidebar]
+backgroundColor = '#20b1388c'
+textColor = "black"
