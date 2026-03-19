@@ -89,11 +89,17 @@ def build_time_df():
     return df
 
 def compute_metrics(df):
+    # Empty dataframe → return zeros
+    if df is None or df.empty:
+        return 0, 0, 0, 0
+
     latest = df.iloc[-1]
 
+    # If only one row, delta = that day's value
     if len(df) > 1:
         prev = df.iloc[-2]
     else:
+        # First data point → treat delta as today's additions
         prev = df.iloc[-1]
 
     word_total = int(latest["word_cum"])
