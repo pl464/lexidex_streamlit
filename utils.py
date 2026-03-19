@@ -90,9 +90,17 @@ def build_time_df():
 
 def compute_metrics(df):
     # Empty dataframe → return zeros
-    if df is None or df.empty:
+    if df is None or df.empty or len(df) == 0:
         return 0, 0, 0, 0
 
+    # additional bulletproofing offered by GPT if rows are Na
+    # Drop invalid rows (e.g., NaT index)
+    # df = df.copy()
+    # df = df[~df.index.isna()]
+
+    # if df.empty:
+    #     return 0, 0, 0, 0
+    
     latest = df.iloc[-1]
 
     # If only one row, delta = that day's value
