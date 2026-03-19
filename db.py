@@ -68,7 +68,7 @@ conn = st.connection("postgresql", type="sql")
 # );
 # """)
 
-conn.commit()
+# conn.commit()
 
 # -------------------------
 # Core Update/Query Functions
