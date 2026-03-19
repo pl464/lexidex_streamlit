@@ -66,6 +66,12 @@ def build_time_df():
     df_words = pd.DataFrame(words, columns=["date", "word_count"])
     df_chars = pd.DataFrame(chars, columns=["date", "char_count"])
 
+    # If both are empty → return empty structured df
+    if df_words.empty and df_chars.empty:
+        return pd.DataFrame(
+            columns=["word_count", "char_count", "word_cum", "char_cum"]
+        )
+    
     df_words["date"] = pd.to_datetime(df_words["date"])
     df_chars["date"] = pd.to_datetime(df_chars["date"])
 
