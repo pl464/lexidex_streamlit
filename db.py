@@ -234,6 +234,7 @@ def update_word_tags(word_id, new_tags):
                 ttl=0
             )
             tag_id = tag_row.iloc[0]["id"]
+            tag_id = int(tag_id) # int cast for postgres
 
             session.execute(
                 text("""
