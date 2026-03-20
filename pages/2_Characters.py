@@ -35,7 +35,8 @@ with st.container():
 
 # st.divider()
 
-for cid, char, notes, count in chars:
+# for cid, char, notes, count in chars:
+for cid, char, notes, count in chars.itertuples(index=False):
 
     if search and search not in char:
         continue
