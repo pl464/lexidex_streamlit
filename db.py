@@ -1,6 +1,7 @@
 import sqlite3
 from datetime import datetime
 import streamlit as st
+from sqlalchemy import text
 
 # conn = sqlite3.connect("words.db", check_same_thread=False)
 # cursor = conn.cursor()
@@ -89,8 +90,6 @@ def get_word_by_id(word_id):
     )
     return df.iloc[0] if not df.empty else None
 
-from sqlalchemy import text
-
 def create_word(text_val, meaning, pron, notes):
     with conn.session as session:
         session.execute(
@@ -170,7 +169,10 @@ def update_encounter(word_id, encounter_id, source, example, date_added, encount
 def delete_encounter(word_id, encounter_id):
     with conn.session as session:
         session.execute(
-            "DELETE FROM encounters WHERE word_id=:word_id AND id=:id",
+            text("""
+                DELETE FROM encounters 
+                WHERE word_id=:word_id AND id=:id
+                 """),
             {"word_id": word_id, "id": encounter_id}
         )
         session.commit()
@@ -205,7 +207,10 @@ def update_word_tags(word_id, new_tags):
     with conn.session as session:
         # Delete all existing relationships
         session.execute(
-            "DELETE FROM word_tags WHERE word_id=:word_id",
+            text("""
+                DELETE FROM word_tags 
+                WHERE word_id=:word_id
+                 """),
             {"word_id": word_id}
         )
 
@@ -267,23 +272,23 @@ RETURNS:
 
 def delete_row(word_id, delete_associated_chars):
     with conn.session as session:
-        session.execute("DELETE FROM words WHERE id=:id", {"id": word_id})
-        session.execute("DELETE FROM encounters WHERE id=:id", {"id": word_id})
-        session.execute("DELETE FROM word_tags WHERE word_id=:word_id", {"word_id": word_id})
+        session.execute(text("DELETE FROM words WHERE id=:id"), {"id": word_id})
+        session.execute(text("DELETE FROM encounters WHERE id=:id"), {"id": word_id})
+        session.execute(text("DELETE FROM word_tags WHERE word_id=:word_id"), {"word_id": word_id})
 
         if delete_associated_chars:
             session.execute(
-                "DELETE FROM word_characters WHERE word_id=:word_id",
+                text("DELETE FROM word_characters WHERE word_id=:word_id"),
                 {"word_id": word_id}
             )
-            session.execute("""
+            session.execute(text("""
                 DELETE FROM characters
                 WHERE NOT EXISTS (
                     SELECT 1
                     FROM word_characters
                     WHERE word_characters.char_id = characters.id
                 )
-            """)
+            """))
 
         session.commit()
 
@@ -433,11 +438,11 @@ def rename_tag(tag_id: int, new_name: str):
 def delete_tag(tag_id: int):
     with conn.session as session:
         session.execute(
-            "DELETE FROM word_tags WHERE tag_id = :tag_id",
+            text("DELETE FROM word_tags WHERE tag_id = :tag_id"),
             {"tag_id": tag_id}
         )
         session.execute(
-            "DELETE FROM tags WHERE id = :id",
+            text("DELETE FROM tags WHERE id = :id"),
             {"id": tag_id}
         )
         session.commit()
