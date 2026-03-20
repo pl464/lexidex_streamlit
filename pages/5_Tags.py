@@ -40,9 +40,9 @@ import db
 def render_tags_page():
     st.title("🏷️ Manage Tags")
 
-    tags = db.get_all_tags()   # [(id, name, word_count), ...]
+    tags = db.get_all_tags_dataframe()   # [(id, name, word_count), ...]
 
-    if not tags:
+    if len(tags) == 0: # not tags:
         st.info("No tags yet — they'll appear here once users start tagging words.")
         return
 
@@ -156,5 +156,5 @@ def render_tags_page():
 # ── Entrypoint ────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="Tags", page_icon="🏷️", layout="centered")
+    st.set_page_config(page_title="Tags", layout="centered") # page_icon="🏷️", 
     render_tags_page()
