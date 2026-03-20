@@ -333,11 +333,10 @@ def all_characters():
                COUNT(wc.word_id) as count
         FROM characters c
         LEFT JOIN word_characters wc ON c.id = wc.char_id
-        GROUP BY c.id
+        GROUP BY c.id, c.char, c.notes
         ORDER BY c.char
     """, ttl=0)
     return df
-
 
 def character_detail(cid):
     df = conn.query(
