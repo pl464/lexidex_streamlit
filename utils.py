@@ -91,6 +91,7 @@ def build_time_df():
 def compute_metrics(df):
     # Empty dataframe → return zeros
     if df is None or df.empty or len(df) == 0:
+        print("DataFrame empty. Returning zero metrics from compute_metrics()")
         return 0, 0, 0, 0
 
     # additional bulletproofing offered by GPT if rows are Na
