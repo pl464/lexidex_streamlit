@@ -364,7 +364,7 @@ def words_for_char(cid):
     """, params={"cid": cid}, ttl=0)
     return df["text"].tolist()
 
-# ----- Tags Queries -----
+# ----- Tags Functionalities -----
 
 def get_all_tags():
     df = conn.query(
@@ -372,6 +372,54 @@ def get_all_tags():
         ttl=0
     )
     return df["name"].tolist()
+
+# conn = sqlite3.connect("words.db", check_same_thread=False)
+# cursor = conn.cursor()
+
+def get_all_tags():
+    """Returns DataFrame of (id, name, word_count) for every tag."""
+    df = conn.query("""
+        SELECT t.id, t.name, COUNT(wt.word_id) AS word_count
+        FROM tags t
+        LEFT JOIN words_tags wt ON t.id = wt.tag_id
+        GROUP BY t.id, t.name
+        ORDER BY t.name
+    """, ttl=0)
+    return df
+
+
+def rename_tag(tag_id: int, new_name: str):
+    with conn.session as session:
+        session.execute(
+            "UPDATE tags SET name = :name WHERE id = :id",
+            {"name": new_name.strip(), "id": tag_id}
+        )
+        session.commit()
+
+
+def delete_tag(tag_id: int):
+    with conn.session as session:
+        session.execute(
+            "DELETE FROM words_tags WHERE tag_id = :tag_id",
+            {"tag_id": tag_id}
+        )
+        session.execute(
+            "DELETE FROM tags WHERE id = :id",
+            {"id": tag_id}
+        )
+        session.commit()
+
+
+def merge_tags(source_id: int, target_id: int):
+    """Re-point all words from source tag to target tag, then delete source."""
+    with conn.session as session:
+        session.execute("""
+            INSERT INTO words_tags (word_id, tag_id)
+            SELECT word_id, :target_id FROM words_tags WHERE tag_id = :source_id
+            ON CONFLICT DO NOTHING
+        """, {"target_id": target_id, "source_id": source_id})
+        session.commit()
+    delete_tag(source_id)
 
 # -------------------------
 # Stats
