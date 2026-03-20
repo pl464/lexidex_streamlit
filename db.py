@@ -95,15 +95,15 @@ def create_word(text_val, meaning, pron, notes):
     with conn.session as session:
         result = session.execute(
             text("""
-                INSERT INTO words (text, meaning, pronunciation, created_at, notes)
-                VALUES (:text, :meaning, :pron, :created_at, :notes)
+                INSERT INTO words (text, meaning, pronunciation, date_first_seen, notes)
+                VALUES (:text, :meaning, :pron, :date_first_seen, :notes)
                 RETURNING id
             """),
             {
                 "text": text_val,
                 "meaning": meaning,
                 "pron": pron,
-                "created_at": datetime.utcnow(),
+                "date_first_seen": datetime.utcnow(),
                 "notes": notes
             }
         )
