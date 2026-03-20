@@ -59,7 +59,7 @@ conn = st.connection("postgresql", type="sql")
 # """)
 
 # cursor.execute("""
-# CREATE TABLE IF NOT EXISTS words_tags (
+# CREATE TABLE IF NOT EXISTS word_tags (
 #     word_id INTEGER,
 #     tag_id INTEGER,
 #     PRIMARY KEY (word_id, tag_id),
@@ -179,13 +179,13 @@ PARAMS:
 - word_id: `id` of word in the words table
 - tags: list of tags from the app.py form
 RETURNS:
-- nothing. updates the words_tags Table (implements one-to-many relationship between word and its tags)
+- nothing. updates the word_tags Table (implements one-to-many relationship between word and its tags)
 '''
 def update_word_tags(word_id, new_tags):
     with conn.session as session:
         # Delete all existing relationships
         session.execute(
-            "DELETE FROM words_tags WHERE word_id=:word_id",
+            "DELETE FROM word_tags WHERE word_id=:word_id",
             {"word_id": word_id}
         )
 
@@ -205,7 +205,7 @@ def update_word_tags(word_id, new_tags):
             tag_id = tag_row.iloc[0]["id"]
 
             session.execute(
-                "INSERT INTO words_tags (word_id, tag_id) VALUES (:word_id, :tag_id)",
+                "INSERT INTO word_tags (word_id, tag_id) VALUES (:word_id, :tag_id)",
                 {"word_id": word_id, "tag_id": tag_id}
             )
 
@@ -219,7 +219,7 @@ RETURNS:
 '''
 def get_tags_for_word(word_id):
     tag_ids_df = conn.query(
-        "SELECT tag_id FROM words_tags WHERE word_id=:word_id",
+        "SELECT tag_id FROM word_tags WHERE word_id=:word_id",
         params={"word_id": word_id},
         ttl=0
     )
@@ -246,7 +246,7 @@ def delete_row(word_id, delete_associated_chars):
     with conn.session as session:
         session.execute("DELETE FROM words WHERE id=:id", {"id": word_id})
         session.execute("DELETE FROM encounters WHERE id=:id", {"id": word_id})
-        session.execute("DELETE FROM words_tags WHERE word_id=:word_id", {"word_id": word_id})
+        session.execute("DELETE FROM word_tags WHERE word_id=:word_id", {"word_id": word_id})
 
         if delete_associated_chars:
             session.execute(
@@ -381,7 +381,7 @@ def get_all_tags():
     df = conn.query("""
         SELECT t.id, t.name, COUNT(wt.word_id) AS word_count
         FROM tags t
-        LEFT JOIN words_tags wt ON t.id = wt.tag_id
+        LEFT JOIN word_tags wt ON t.id = wt.tag_id
         GROUP BY t.id, t.name
         ORDER BY t.name
     """, ttl=0)
@@ -400,7 +400,7 @@ def rename_tag(tag_id: int, new_name: str):
 def delete_tag(tag_id: int):
     with conn.session as session:
         session.execute(
-            "DELETE FROM words_tags WHERE tag_id = :tag_id",
+            "DELETE FROM word_tags WHERE tag_id = :tag_id",
             {"tag_id": tag_id}
         )
         session.execute(
@@ -414,8 +414,8 @@ def merge_tags(source_id: int, target_id: int):
     """Re-point all words from source tag to target tag, then delete source."""
     with conn.session as session:
         session.execute("""
-            INSERT INTO words_tags (word_id, tag_id)
-            SELECT word_id, :target_id FROM words_tags WHERE tag_id = :source_id
+            INSERT INTO word_tags (word_id, tag_id)
+            SELECT word_id, :target_id FROM word_tags WHERE tag_id = :source_id
             ON CONFLICT DO NOTHING
         """, {"target_id": target_id, "source_id": source_id})
         session.commit()
