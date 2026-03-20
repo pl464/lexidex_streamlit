@@ -77,8 +77,8 @@ conn = st.connection("postgresql", type="sql")
 
 # ----- Word/Entries -----
 
-def get_word_by_text(text):
-    df = conn.query("SELECT id, text, meaning, pronunciation, notes FROM words WHERE text = :text", params={"text": text})
+def get_word_by_text(text_val):
+    df = conn.query("SELECT id, text, meaning, pronunciation, notes FROM words WHERE text = :text", params={"text": text_val})
     return df.iloc[0] if not df.empty else None
     # return cursor.fetchone()
 
@@ -115,13 +115,13 @@ def create_word(text_val, meaning, pron, notes):
     #     print('Exception in db.py:', e)
     # return cursor.lastrowid
 
-def update_word(word_id, text, pron, meaning, notes):
+def update_word(word_id, text_val, pron, meaning, notes):
     with conn.session as session:
         session.execute(
             text("""
             UPDATE words SET text=:text, pronunciation=:pron, meaning=:meaning, notes=:notes WHERE id=:id
                  """),
-            {"text": text, "pron": pron, "meaning": meaning, "notes": notes, "id": word_id}
+            {"text": text_val, "pron": pron, "meaning": meaning, "notes": notes, "id": word_id}
         )
         session.commit()
 
@@ -315,8 +315,8 @@ def get_or_create_char(c):
             return result.lastrowid
 
 
-def link_word_chars(word_id, text):
-    for c in text:
+def link_word_chars(word_id, text_val):
+    for c in text_val:
         cid = get_or_create_char(c)
         with conn.session as session:
             session.execute(
