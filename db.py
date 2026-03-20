@@ -376,7 +376,7 @@ def get_all_tags():
 # conn = sqlite3.connect("words.db", check_same_thread=False)
 # cursor = conn.cursor()
 
-def get_all_tags():
+def get_all_tags_dataframe():
     """Returns DataFrame of (id, name, word_count) for every tag."""
     df = conn.query("""
         SELECT t.id, t.name, COUNT(wt.word_id) AS word_count
