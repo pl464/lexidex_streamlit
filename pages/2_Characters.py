@@ -13,10 +13,14 @@ sort = st.selectbox("Sort by", ["Character", "Word Count"])
 
 chars = db.all_characters()
 
+# if sort == "Word Count":
+#     chars = sorted(chars, key=lambda x: x[3], reverse=True)
+# else:
+#     chars = sorted(chars, key=lambda x: x[1])
 if sort == "Word Count":
-    chars = sorted(chars, key=lambda x: x[3], reverse=True)
+    chars = chars.sort_values(by="count", ascending=False)
 else:
-    chars = sorted(chars, key=lambda x: x[1])
+    chars = chars.sort_values(by="char")
 
 st.divider()
 
