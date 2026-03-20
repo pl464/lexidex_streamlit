@@ -89,11 +89,22 @@ def get_word_by_id(word_id):
     )
     return df.iloc[0] if not df.empty else None
 
-def create_word(text, meaning, pron, notes):
+from sqlalchemy import text
+
+def create_word(text_val, meaning, pron, notes):
     with conn.session as session:
         session.execute(
-            "INSERT INTO words (text, meaning, pronunciation, created_at, notes) VALUES (:text, :meaning, :pron, :created_at, :notes)",
-            {"text": text, "meaning": meaning, "pron": pron, "created_at": datetime.now().isoformat(), "notes": notes}
+            text("""
+                INSERT INTO words (text, meaning, pronunciation, created_at, notes)
+                VALUES (:text, :meaning, :pron, :created_at, :notes)
+            """),
+            {
+                "text": text_val,
+                "meaning": meaning,
+                "pron": pron,
+                "created_at": datetime.now().isoformat(),
+                "notes": notes
+            }
         )
         session.commit()
     # try:
