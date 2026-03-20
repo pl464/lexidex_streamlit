@@ -1,45 +1,46 @@
 import streamlit as st
-import sqlite3
+# import sqlite3
+import db
 
-conn = sqlite3.connect("words.db", check_same_thread=False)
-cursor = conn.cursor()
+# conn = sqlite3.connect("words.db", check_same_thread=False)
+# cursor = conn.cursor()
 
-# ── Data access ───────────────────────────────────────────────────────────────
+# # ── Data access ───────────────────────────────────────────────────────────────
 
-def get_all_tags():
-    """Returns list of (id, name, word_count) for every tag."""
-    cursor.execute("""
-        SELECT t.id, t.name, COUNT(wt.word_id) as word_count
-        FROM tags t
-        LEFT JOIN words_tags wt ON t.id = wt.tag_id
-        GROUP BY t.id, t.name
-        ORDER BY t.name COLLATE NOCASE
-    """)
-    return cursor.fetchall()
+# def get_all_tags():
+#     """Returns list of (id, name, word_count) for every tag."""
+#     cursor.execute("""
+#         SELECT t.id, t.name, COUNT(wt.word_id) as word_count
+#         FROM tags t
+#         LEFT JOIN words_tags wt ON t.id = wt.tag_id
+#         GROUP BY t.id, t.name
+#         ORDER BY t.name COLLATE NOCASE
+#     """)
+#     return cursor.fetchall()
 
-def rename_tag(tag_id: int, new_name: str):
-    cursor.execute("UPDATE tags SET name = ? WHERE id = ?", (new_name.strip(), tag_id))
-    conn.commit()
+# def rename_tag(tag_id: int, new_name: str):
+#     cursor.execute("UPDATE tags SET name = ? WHERE id = ?", (new_name.strip(), tag_id))
+#     conn.commit()
 
-def delete_tag(tag_id: int):
-    cursor.execute("DELETE FROM words_tags WHERE tag_id = ?", (tag_id,))
-    cursor.execute("DELETE FROM tags WHERE id = ?", (tag_id,))
-    conn.commit()
+# def delete_tag(tag_id: int):
+#     cursor.execute("DELETE FROM words_tags WHERE tag_id = ?", (tag_id,))
+#     cursor.execute("DELETE FROM tags WHERE id = ?", (tag_id,))
+#     conn.commit()
 
-def merge_tags(source_id: int, target_id: int):
-    """Re-point all words from source tag to target tag, then delete source."""
-    cursor.execute("""
-        INSERT OR IGNORE INTO words_tags (word_id, tag_id)
-        SELECT word_id, ? FROM words_tags WHERE tag_id = ?
-    """, (target_id, source_id))
-    delete_tag(source_id)
+# def merge_tags(source_id: int, target_id: int):
+#     """Re-point all words from source tag to target tag, then delete source."""
+#     cursor.execute("""
+#         INSERT OR IGNORE INTO words_tags (word_id, tag_id)
+#         SELECT word_id, ? FROM words_tags WHERE tag_id = ?
+#     """, (target_id, source_id))
+#     delete_tag(source_id)
 
 # ── Page ──────────────────────────────────────────────────────────────────────
 
 def render_tags_page():
     st.title("🏷️ Manage Tags")
 
-    tags = get_all_tags()   # [(id, name, word_count), ...]
+    tags = db.get_all_tags()   # [(id, name, word_count), ...]
 
     if not tags:
         st.info("No tags yet — they'll appear here once users start tagging words.")
@@ -88,7 +89,7 @@ def render_tags_page():
                         if st.button("Save", key=f"save_{tag_id}", use_container_width=True):
                             if new_name.strip() and new_name.strip() != name:
                                 try:
-                                    rename_tag(tag_id, new_name)
+                                    db.rename_tag(tag_id, new_name)
                                     st.success(f"Renamed to **{new_name.strip()}**")
                                     del st.session_state[f"editing_{tag_id}"]
                                     st.rerun()
@@ -116,7 +117,7 @@ def render_tags_page():
                         m1, m2 = st.columns(2)
                         with m1:
                             if st.button("Merge", key=f"merge_{tag_id}", use_container_width=True, type="primary"):
-                                merge_tags(tag_id, target)
+                                db.erge_tags(tag_id, target)
                                 del st.session_state[f"editing_{tag_id}"]
                                 st.rerun()
                         with m2:
@@ -134,7 +135,7 @@ def render_tags_page():
                 d1, d2 = st.columns(2)
                 with d1:
                     if st.button("Yes, delete", key=f"confirm_del_{tag_id}", use_container_width=True, type="primary"):
-                        delete_tag(tag_id)
+                        db.delete_tag(tag_id)
                         del st.session_state[f"confirming_delete_{tag_id}"]
                         st.rerun()
                 with d2:
@@ -148,7 +149,7 @@ def render_tags_page():
         st.divider()
         if st.button(f"🗑 Delete all {len(unused)} unused tag{'s' if len(unused) != 1 else ''}", type="primary"):
             for tag_id, _, _ in unused:
-                delete_tag(tag_id)
+                db.delete_tag(tag_id)
             st.rerun()
 
 
