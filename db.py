@@ -90,22 +90,28 @@ def get_word_by_id(word_id):
     )
     return df.iloc[0] if not df.empty else None
 
+
 def create_word(text_val, meaning, pron, notes):
     with conn.session as session:
-        session.execute(
+        result = session.execute(
             text("""
-                INSERT INTO words (text, meaning, pronunciation, date_first_seen, notes)
-                VALUES (:text, :meaning, :pron, :date_first_seen, :notes)
+                INSERT INTO words (text, meaning, pronunciation, created_at, notes)
+                VALUES (:text, :meaning, :pron, :created_at, :notes)
+                RETURNING id
             """),
             {
                 "text": text_val,
                 "meaning": meaning,
                 "pron": pron,
-                "date_first_seen": datetime.now().isoformat(),
+                "created_at": datetime.utcnow(),
                 "notes": notes
             }
         )
+
+        word_id = result.scalar()  # 👈 this is key
         session.commit()
+
+    return word_id
     # try:
     # cursor.execute("""
     #     INSERT INTO words VALUES (NULL, ?, ?, ?, ?, ?)
@@ -318,6 +324,7 @@ def get_or_create_char(c):
 def link_word_chars(word_id, text_val):
     for c in text_val:
         cid = get_or_create_char(c)
+        cid = int(cid) # cast from numpy because postgres can only use native python types (?)
         with conn.session as session:
             session.execute(
                 text("""
