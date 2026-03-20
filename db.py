@@ -119,7 +119,9 @@ def create_word(text_val, meaning, pron, notes):
 def update_word(word_id, text, pron, meaning, notes):
     with conn.session as session:
         session.execute(
-            "UPDATE words SET text=:text, pronunciation=:pron, meaning=:meaning, notes=:notes WHERE id=:id",
+            text("""
+            UPDATE words SET text=:text, pronunciation=:pron, meaning=:meaning, notes=:notes WHERE id=:id
+                 """),
             {"text": text, "pron": pron, "meaning": meaning, "notes": notes, "id": word_id}
         )
         session.commit()
@@ -138,11 +140,12 @@ def get_encounter_by_id(encounter_id):
 def add_encounter(word_id, source, example, date, notes):
     with conn.session as session:
         session.execute(
-            "INSERT INTO encounters (word_id, source, example, date_added, notes) VALUES (:word_id, :source, :example, :date, :notes)",
+            text("""
+                 INSERT INTO encounters (word_id, source, example, date_added, notes) VALUES (:word_id, :source, :example, :date, :notes)",
+            """),
             {"word_id": word_id, "source": source, "example": example, "date": date, "notes": notes}
         )
         session.commit()
-
 
 def encounter_count(word_id):
     df = conn.query(
@@ -156,7 +159,9 @@ def encounter_count(word_id):
 def update_encounter(word_id, encounter_id, source, example, date_added, encounter_notes):
     with conn.session as session:
         session.execute(
-            "UPDATE encounters SET source=:source, example=:example, date_added=:date_added, notes=:notes WHERE word_id=:word_id AND id=:id",
+            text("""
+                 UPDATE encounters SET source=:source, example=:example, date_added=:date_added, notes=:notes WHERE word_id=:word_id AND id=:id
+                 """),
             {"source": source, "example": example, "date_added": date_added, "notes": encounter_notes, "word_id": word_id, "id": encounter_id}
         )
         session.commit()
@@ -180,11 +185,15 @@ RETURNS:
 def add_tag(name):
     with conn.session as session:
         result = session.execute(
-            "INSERT INTO tags (name) VALUES (:name)",
+            text("""
+                 INSERT INTO tags (name) 
+                 VALUES (:name)
+            """),
             {"name": name}
         )
         session.commit()
         return result.lastrowid
+        
 '''
 PARAMS:
 - word_id: `id` of word in the words table
@@ -216,7 +225,10 @@ def update_word_tags(word_id, new_tags):
             tag_id = tag_row.iloc[0]["id"]
 
             session.execute(
-                "INSERT INTO word_tags (word_id, tag_id) VALUES (:word_id, :tag_id)",
+                text("""
+                    INSERT INTO word_tags (word_id, tag_id) 
+                    VALUES (:word_id, :tag_id)
+                    """),
                 {"word_id": word_id, "tag_id": tag_id}
             )
 
@@ -288,7 +300,10 @@ def get_or_create_char(c):
     else:
         with conn.session as session:
             result = session.execute(
-                "INSERT INTO characters (char, date_added, notes) VALUES (:c, :date_added, '')",
+                text("""
+                     INSERT INTO characters (char, date_added, notes) 
+                     VALUES (:c, :date_added, '')
+                     """),
                 {"c": c, "date_added": datetime.now().isoformat()}
             )
             session.commit()
@@ -300,7 +315,10 @@ def link_word_chars(word_id, text):
         cid = get_or_create_char(c)
         with conn.session as session:
             session.execute(
-                "INSERT INTO word_characters (word_id, char_id) VALUES (:word_id, :cid) ON CONFLICT DO NOTHING",
+                text("""
+                     INSERT INTO word_characters (word_id, char_id) 
+                     VALUES (:word_id, :cid) ON CONFLICT DO NOTHING
+                     """),
                 {"word_id": word_id, "cid": cid}
             )
             session.commit()
@@ -361,7 +379,9 @@ def character_detail(cid):
 def update_char_notes(cid, notes):
     with conn.session as session:
         session.execute(
-            "UPDATE characters SET notes=:notes WHERE id=:id",
+            text("""
+            UPDATE characters SET notes=:notes WHERE id=:id
+                 """),
             {"notes": notes, "id": cid}
         )
         session.commit()
@@ -402,7 +422,9 @@ def get_all_tags_dataframe():
 def rename_tag(tag_id: int, new_name: str):
     with conn.session as session:
         session.execute(
-            "UPDATE tags SET name = :name WHERE id = :id",
+            text("""
+                UPDATE tags SET name = :name WHERE id = :id
+                 """),
             {"name": new_name.strip(), "id": tag_id}
         )
         session.commit()
@@ -424,11 +446,13 @@ def delete_tag(tag_id: int):
 def merge_tags(source_id: int, target_id: int):
     """Re-point all words from source tag to target tag, then delete source."""
     with conn.session as session:
-        session.execute("""
-            INSERT INTO word_tags (word_id, tag_id)
-            SELECT word_id, :target_id FROM word_tags WHERE tag_id = :source_id
-            ON CONFLICT DO NOTHING
-        """, {"target_id": target_id, "source_id": source_id})
+        session.execute(
+            text("""
+                INSERT INTO word_tags (word_id, tag_id)
+                SELECT word_id, :target_id FROM word_tags WHERE tag_id = :source_id
+                ON CONFLICT DO NOTHING
+                """), 
+            {"target_id": target_id, "source_id": source_id})
         session.commit()
     delete_tag(source_id)
 
