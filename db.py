@@ -140,7 +140,7 @@ def add_encounter(word_id, source, example, date, notes):
     with conn.session as session:
         session.execute(
             text("""
-                 INSERT INTO encounters (word_id, source, example, date_added, notes) VALUES (:word_id, :source, :example, :date, :notes)",
+                 INSERT INTO encounters (word_id, source, example, date_added, notes) VALUES (:word_id, :source, :example, :date, :notes)
             """),
             {"word_id": word_id, "source": source, "example": example, "date": date, "notes": notes}
         )
