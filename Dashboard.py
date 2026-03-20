@@ -9,7 +9,8 @@ import streamlit as st
 import pandas as pd
 import db
 from utils import *
-# from streamlit_extras.stylable_container import stylable_container
+# from streamlit_extras.stylable_container import stylable_container 
+import uuid
 
 # -------------------------
 # Setup
@@ -234,7 +235,7 @@ if submitted:
 # ----- Handle a legit submit -----
 if st.session_state.confirm_submit:
 
-    wid = db.create_word(user_id, entry.strip(), meaning.strip(), pronunciation.strip(), notes.strip())
+    wid = db.create_word(entry.strip(), meaning.strip(), pronunciation.strip(), notes.strip())
 
     # handle new tag creation
     for tag in tags: 
