@@ -75,7 +75,11 @@ def build_time_df():
     df_words["date"] = pd.to_datetime(df_words["date"])
     df_chars["date"] = pd.to_datetime(df_chars["date"])
 
-    df = pd.merge(df_words, df_chars, on="date", how="outer").fillna(0)
+    # df = pd.merge(df_words, df_chars, on="date", how="outer").fillna(0)
+    df = pd.merge(df_words, df_chars, on="date", how="outer")
+
+    df = df.fillna(0)
+    df[["word_count", "char_count"]] = df[["word_count", "char_count"]].astype(int)
     df = df.sort_values("date").set_index("date")
 
     # Fill missing days
