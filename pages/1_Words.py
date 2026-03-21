@@ -14,7 +14,7 @@ reset_select_session_states()
 df = db.all_words()
 st.download_button(
     "Press to Download",
-    df,
+    df.to_csv.encode('utf-8'),
     "file.csv",
     "text/csv",
     key='download-csv'
