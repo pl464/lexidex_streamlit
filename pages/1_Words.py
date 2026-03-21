@@ -12,6 +12,18 @@ reset_select_session_states()
 
 # rows = db.all_words()
 df = db.all_words()
+
+# df = pd.DataFrame(
+#     rows,
+#     columns=["id", "Word", "Meaning", "Pronunciation", "Last Seen", "Notes"]
+# )
+
+df['Tags'] = df['id'].apply(lambda x: db.get_tags_for_word(x))
+df['Last Enc.'] = df['last_seen'].apply(lambda x: pretty_time(x))
+df['Num Encounters'] = df['id'].apply(lambda x: db.encounter_count(x))
+df['Notes?'] = df['notes'].apply(lambda x: indicate_notes_exist(x))
+df = df.drop(columns=["last_seen", "notes"])
+
 st.download_button(
     "Press to Download",
     df.to_csv().encode('utf-8'),
@@ -19,16 +31,6 @@ st.download_button(
     "text/csv",
     key='download-csv'
 )
-# df = pd.DataFrame(
-#     rows,
-#     columns=["id", "Word", "Meaning", "Pronunciation", "Last Seen", "Notes"]
-# )
-
-df['Tags'] = df['id'].apply(lambda x: db.get_tags_for_word(x))
-df['Last Enc.'] = df['Last Seen'].apply(lambda x: pretty_time(x))
-df['Num Encounters'] = df['id'].apply(lambda x: db.encounter_count(x))
-df['Notes?'] = df['Notes'].apply(lambda x: indicate_notes_exist(x))
-df = df.drop(columns=["Last Seen", "Notes"])
 
 # ----- Session State -----
 
