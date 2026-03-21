@@ -77,33 +77,34 @@ st.space()
 # Counts
 # -------------------------
 
-df = build_time_df()
-word_total, word_delta, char_total, char_delta = compute_metrics(df)
+# df = build_time_df()
+# word_total, word_delta, char_total, char_delta = compute_metrics(df)
 
-row = st.container(horizontal=True)
+# row = st.container(horizontal=True)
 
-with row:
-    st.metric(
-        "Words",
-        word_total,
-        delta=word_delta,
-        chart_data=df["word_cum"],
-        chart_type="line",
-        border=True,
-        delta_description="today",
-        width=int(DASHBOARD_REFERENCE_WIDTH/2-10),
-    )
+# with row:
+#     st.metric(
+#         "Words",
+#         word_total,
+#         delta=word_delta,
+#         chart_data=df["word_cum"],
+#         chart_type="line",
+#         border=True,
+#         delta_description="today",
+#         width=int(DASHBOARD_REFERENCE_WIDTH/2-10),
+#     )
 
-    st.metric(
-        "Characters",
-        char_total,
-        delta=char_delta,
-        chart_data=df["char_cum"],
-        chart_type="line",
-        border=True,
-        delta_description="today",
-        width=int(DASHBOARD_REFERENCE_WIDTH/2-10),
-    )
+#     st.metric(
+#         "Characters",
+#         char_total,
+#         delta=char_delta,
+#         chart_data=df["char_cum"],
+#         chart_type="line",
+#         border=True,
+#         delta_description="today",
+#         width=int(DASHBOARD_REFERENCE_WIDTH/2-10),
+#     )
+
 # with c3:
 #     plot_df = df[["word_cum", "char_cum"]].rename(
 #         columns={"word_cum": "Words", "char_cum": "Characters"}
