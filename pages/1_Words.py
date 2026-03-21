@@ -10,12 +10,19 @@ reset_select_session_states()
 
 # ----- DataFrame -----
 
-rows = db.all_words()
-
-df = pd.DataFrame(
-    rows,
-    columns=["id", "Word", "Meaning", "Pronunciation", "Last Seen", "Notes"]
+# rows = db.all_words()
+df = db.all_words()
+st.download_button(
+    "Press to Download",
+    df,
+    "file.csv",
+    "text/csv",
+    key='download-csv'
 )
+# df = pd.DataFrame(
+#     rows,
+#     columns=["id", "Word", "Meaning", "Pronunciation", "Last Seen", "Notes"]
+# )
 
 df['Tags'] = df['id'].apply(lambda x: db.get_tags_for_word(x))
 df['Last Enc.'] = df['Last Seen'].apply(lambda x: pretty_time(x))
