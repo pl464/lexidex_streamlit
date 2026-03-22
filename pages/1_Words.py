@@ -20,6 +20,7 @@ df = db.all_words()
 
 df['Tags'] = df['id'].apply(lambda x: db.get_tags_for_word(x))
 # df['Last Enc.'] = df['last_seen'].apply(lambda x: pretty_time(x))
+df['Last Seen'] = df['last_seen'].astype(str)
 df['Num Encounters'] = df['id'].apply(lambda x: db.encounter_count(x))
 df['Notes?'] = df['notes'].apply(lambda x: indicate_notes_exist(x))
 df = df.drop(columns=["last_seen", "notes"])
@@ -159,7 +160,7 @@ column_config = {
                 width='large',
                 accept_new_options=True,
             ),
-            "last_seen": st.column_config.TextColumn(
+            "Last Seen": st.column_config.TextColumn(
                 "Last Seen",
                 # width=70,
                 disabled=True,
