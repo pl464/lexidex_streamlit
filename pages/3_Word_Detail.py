@@ -13,13 +13,16 @@ if not wid:
     st.warning("No word selected. Go to the Words tab and select a word!")
     st.stop()
 
-rows = db.word_encounters(wid)
+# rows = db.word_encounters(wid)
 
-df = pd.DataFrame(
-    rows,
-    columns=["id", "Date", "Source", "Example", "Notes"] # Notes # TODO: notes 
-)
-df['Date'] = df['Date'].apply(lambda x: pretty_time(x))
+# df = pd.DataFrame(
+#     rows,
+#     columns=["id", "Date", "Source", "Example", "Notes"] # Notes # TODO: notes 
+# )
+# df['Date'] = df['Date'].apply(lambda x: pretty_time(x))
+
+df = db.word_encounters(wid)
+df['date_added'] = df['date_added'].astype(str)
 
 word = db.word_detail(wid)
 print("Word is", word)
