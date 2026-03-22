@@ -454,7 +454,7 @@ event = st.data_editor(
     # on_select="rerun", # lambda: on_row_select(event.selection),
     column_config = {
         "id": None,
-        "Date": st.column_config.TextColumn( # https://docs.streamlit.io/develop/api-reference/data/st.column_config/st.column_config.textcolumn
+        "date_added": st.column_config.TextColumn( # https://docs.streamlit.io/develop/api-reference/data/st.column_config/st.column_config.textcolumn
             "Date Added",
             help="When this encounter was added",
             width="small",
