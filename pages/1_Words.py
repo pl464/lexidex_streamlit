@@ -18,10 +18,14 @@ df = db.all_words()
 #     columns=["id", "Word", "Meaning", "Pronunciation", "Last Seen", "Notes"]
 # )
 
+st.write("Loading tags into DF")
 df['Tags'] = df['id'].apply(lambda x: db.get_tags_for_word(x))
+st.write("Running last seen")
 # df['Last Enc.'] = df['last_seen'].apply(lambda x: pretty_time(x))
 df['Last Seen'] = df['last_seen'].astype(str)
+st.write("Running encounter count")
 df['Num Encounters'] = df['id'].apply(lambda x: db.encounter_count(x))
+st.write("Running notes")
 df['Notes?'] = df['notes'].apply(lambda x: indicate_notes_exist(x))
 df = df.drop(columns=["last_seen", "notes"])
 
@@ -76,7 +80,9 @@ if search:
     ]
 
 # ---------------- Tags ----------------
+st.write("Loading tags")
 all_tags = db.get_all_tags()
+
 tag_filter = st.multiselect("Filter by tag", all_tags, width=500)
 
 if tag_filter:
