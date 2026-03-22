@@ -67,7 +67,8 @@ search = st.text_input("Search (Word)", width=500)
 
 if search:
     df = df[
-        df["Word"].str.contains(search, case=False, na=False) 
+        # df["Word"].str.contains(search, case=False, na=False) 
+        df["text"].str.contains(search, case=False, na=False) 
         # toggle the below lines to search by Meaning as well
         # | 
         # df["Meaning"].str.contains(search, case=False, na=False)
@@ -143,22 +144,22 @@ if (mode == None): # prevents there from being no table from showing up (a requi
 
 column_config = {
             "id": None,
-            "Word": st.column_config.TextColumn( # https://docs.streamlit.io/develop/api-reference/data/st.column_config/st.column_config.textcolumn
+            "text": st.column_config.TextColumn( # https://docs.streamlit.io/develop/api-reference/data/st.column_config/st.column_config.textcolumn
                 "Word",
                 help="Click a Word for more info"
             ),
-            "Meaning": st.column_config.TextColumn( # https://docs.streamlit.io/develop/api-reference/data/st.column_config/st.column_config.textcolumn
+            "meaning": st.column_config.TextColumn( # https://docs.streamlit.io/develop/api-reference/data/st.column_config/st.column_config.textcolumn
                 "Meaning",
                 width='large',
             ),
-            "Tags": st.column_config.MultiselectColumn(
+            "tags": st.column_config.MultiselectColumn(
                 "Tags",
                 options=db.get_all_tags(), # implicitly required to consistently assign colors to tags
                 color="auto",
                 width='large',
                 accept_new_options=True,
             ),
-            "Last Updated": st.column_config.TextColumn(
+            "Last Enc.": st.column_config.TextColumn(
                 "Updated",
                 # width=70,
                 disabled=True,
@@ -168,7 +169,7 @@ column_config = {
                 # width=30,
                 disabled=True,
             ),
-            "Notes": st.column_config.TextColumn(
+            "Notes?": st.column_config.TextColumn(
                 "Notes",
                 
             ),
