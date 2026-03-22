@@ -90,7 +90,7 @@ def get_word_by_id(word_id):
     )
     return df.iloc[0] if not df.empty else None
 
-
+@st.cache_data(ttl=10)
 def create_word(text_val, meaning, pron, notes):
     with conn.session as session:
         result = session.execute(
@@ -323,24 +323,42 @@ def get_or_create_char(c):
 
 
 def link_word_chars(word_id, text_val):
-    for c in text_val:
-        cid = get_or_create_char(c)
-        cid = int(cid) # cast from numpy because postgres can only use native python types (?)
-        with conn.session as session:
+    with conn.session as session:
+        for c in text_val:
+            # cid = get_or_create_char(c)
+            df = conn.query(
+                "SELECT id FROM characters WHERE char=:c",
+                params={"c": c},
+                ttl=0
+            )
+            if not df.empty:
+                cid = df.iloc[0]["id"]
+            else:
+                result = session.execute(
+                    text("""
+                        INSERT INTO characters (char, date_added, notes) 
+                        VALUES (:c, :date_added, '')
+                        """),
+                    {"c": c, "date_added": datetime.now().isoformat()}
+                )
+                session.commit()
+                cid = result.lastrowid
+            cid = int(cid) # cast from numpy because postgres can only use native python types (?)
             session.execute(
                 text("""
-                     INSERT INTO word_characters (word_id, char_id) 
-                     VALUES (:word_id, :cid) ON CONFLICT DO NOTHING
-                     """),
+                    INSERT INTO word_characters (word_id, char_id) 
+                    VALUES (:word_id, :cid) ON CONFLICT DO NOTHING
+                    """),
                 {"word_id": word_id, "cid": cid}
             )
             session.commit()
 
 # ----- Word/Entry Queries -----
 
+@st.cache_data(ttl=10)
 def all_words():
     df = conn.query("""
-        SELECT w.id, w.text, w.pronunciation, w.meaning,
+        SELECT w.id, w.text, w.meaning, w.pronunciation, 
                MAX(e.date_added) as last_seen, w.notes
         FROM words w
         LEFT JOIN encounters e ON w.id = e.word_id
