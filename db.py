@@ -90,7 +90,7 @@ def get_word_by_id(word_id):
     )
     return df.iloc[0] if not df.empty else None
 
-@st.cache_data(ttl=10)
+@st.cache_data
 def create_word(text_val, meaning, pron, notes):
     with conn.session as session:
         result = session.execute(
@@ -152,6 +152,7 @@ def add_encounter(word_id, source, example, date, notes):
         )
         session.commit()
 
+@st.cache_data
 def encounter_count(word_id):
     df = conn.query(
         "SELECT COUNT(*) AS count FROM encounters WHERE word_id = :word_id",
@@ -159,6 +160,16 @@ def encounter_count(word_id):
         ttl=0
     )
     return df.iloc[0]["count"]
+
+@st.cache_data
+def encounter_counts():
+    df = conn.query("""
+        SELECT word_id, COUNT(*) AS count
+        FROM encounters
+        GROUP BY word_id
+    """, ttl=10)
+
+    return dict(zip(df["word_id"], df["count"]))
 
 
 def update_encounter(word_id, encounter_id, source, example, date_added, encounter_notes):
@@ -355,7 +366,7 @@ def link_word_chars(word_id, text_val):
 
 # ----- Word/Entry Queries -----
 
-@st.cache_data(ttl=10)
+@st.cache_data
 def all_words():
     df = conn.query("""
         SELECT w.id, w.text, w.meaning, w.pronunciation, 
@@ -384,6 +395,8 @@ def word_encounters(word_id):
         ttl=0
     )
     return df
+
+
 
 # ----- Character Queries -----
 
