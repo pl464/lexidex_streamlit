@@ -24,7 +24,13 @@ st.write("Running last seen")
 # df['Last Enc.'] = df['last_seen'].apply(lambda x: pretty_time(x))
 df['Last Seen'] = df['last_seen'].astype(str)
 st.write("Running encounter count")
-df['Num Encounters'] = df['id'].apply(lambda x: db.encounter_count(x))
+
+counts = db.encounter_counts()
+df['Num Encounters'] = df['id'].map(counts).fillna(0).astype(int)
+
+# df['Num Encounters'] = df['id'].apply(lambda x: db.encounter_count(x))
+
+
 st.write("Running notes")
 df['Notes?'] = df['notes'].apply(lambda x: indicate_notes_exist(x))
 df = df.drop(columns=["last_seen", "notes"])
