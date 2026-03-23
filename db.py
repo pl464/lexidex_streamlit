@@ -263,21 +263,46 @@ PARAMS:
 RETURNS:
 - list[str] of tag names for the word
 '''
-def get_tags_for_word(word_id):
-    tag_ids_df = conn.query(
-        "SELECT tag_id FROM word_tags WHERE word_id=:word_id",
-        params={"word_id": word_id},
-        ttl=0
-    )
-    tag_names = []
-    for tag_id in tag_ids_df["tag_id"]:
-        tag_df = conn.query(
-            "SELECT name FROM tags WHERE id=:id",
-            params={"id": tag_id},
-            ttl=0
-        )
-        tag_names.append(tag_df.iloc[0]["name"])
-    return tag_names
+# def get_tags_for_word(word_id):
+#     tag_ids_df = conn.query(
+#         "SELECT tag_id FROM word_tags WHERE word_id=:word_id",
+#         params={"word_id": word_id},
+#         ttl=0
+#     )
+#     tag_names = []
+#     for tag_id in tag_ids_df["tag_id"]:
+#         tag_df = conn.query(
+#             "SELECT name FROM tags WHERE id=:id",
+#             params={"id": tag_id},
+#             ttl=0
+#         )
+#         tag_names.append(tag_df.iloc[0]["name"])
+#     return tag_names
+
+# more Streamlit/postgres/deployment efficiency-friendly
+@st.cache_data
+def tags_by_word():
+    df = conn.query("""
+        SELECT wt.word_id, t.name
+        FROM word_tags wt
+        JOIN tags t ON wt.tag_id = t.id
+    """, ttl=10)
+    
+    result = {}
+
+    for word_id, name in df.itertuples(index=False):
+        result.setdefault(word_id, []).append(name)
+
+    return result
+
+@st.cache_data
+def encounter_counts():
+    df = conn.query("""
+        SELECT word_id, COUNT(*) AS count
+        FROM encounters
+        GROUP BY word_id
+    """, ttl=10)
+    return dict(zip(df["word_id"], df["count"]))
 
 # ----- Database Edits -----
 '''
