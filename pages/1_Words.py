@@ -19,7 +19,9 @@ df = db.all_words()
 # )
 
 st.write("Loading tags into DF")
-df['Tags'] = df['id'].apply(lambda x: db.get_tags_for_word(x)) # .apply() is not very efficient given postgres syntax which returns queries 
+# df['Tags'] = df['id'].apply(lambda x: db.get_tags_for_word(x)) # .apply() is not very efficient given postgres syntax which returns queries 
+tags_map = db.tags_by_word()
+df["Tags"] = df["id"].map(tags_map).apply(lambda x: x or [])
 
 st.write("Running last seen")
 # df['Last Enc.'] = df['last_seen'].apply(lambda x: pretty_time(x))
