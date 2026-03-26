@@ -63,9 +63,9 @@ all_tags = db.get_all_tags()
 DASHBOARD_REFERENCE_WIDTH = 1000
 
 # ----- Local debugging -----
-print("*** Running code at the top of app.py. ***")
-print("db.all_words() is currently:", db.all_words())
-print("db.get_all_tags() is currently:", db.get_all_tags(), '\n')
+print("*** Dashboard.py is running from the top ***")
+# print("db.all_words() is currently:", db.all_words())
+# print("db.get_all_tags() is currently:", db.get_all_tags(), '\n')
 
 # -------------------------
 # Title
@@ -236,18 +236,23 @@ if submitted:
 # ----- Handle a legit submit -----
 if st.session_state.confirm_submit:
 
+    st.write("Creating word.")
     wid = db.create_word(entry.strip(), meaning.strip(), pronunciation.strip(), notes.strip())
 
+    st.write("Adding tagz")
     # handle new tag creation
     for tag in tags: 
         if tag not in all_tags:
             print("Confirmed submit. Adding tag:", tag)
             db.add_tag(tag)
-    print("Confirmed submit. Updated db.get_all_tags():", db.get_all_tags())
+    # print("Confirmed submit. Updated db.get_all_tags():", db.get_all_tags())
     
+    st.write("Updating word-tagz")
     db.update_word_tags(wid, tags)
 
+    st.write("Adding encounter")
     db.add_encounter(wid, source, example, date, encounter_notes)
+    st.write("Adding charsipoos")
     db.link_word_chars(wid, entry)
 
     # st.success("New word added.")
