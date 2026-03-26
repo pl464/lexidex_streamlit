@@ -251,10 +251,10 @@ elif mode == "🔍 View":
         col_id = selected_cell[1]
         if (col_id == 'text'):
             print("ROW NUM:", row_id)
-            word_id = df.loc[row_id,"id"]
+            word_id = int(df.loc[row_id,"id"])
             print("WORD ID:", word_id)
 
-            st.session_state.word_id = int(word_id)
+            st.session_state.word_id = word_id
             st.session_state.word_tags = tags_map[word_id] # This was introduced 3/26 in attempt to minimize queries
 
             st.session_state.edit_mode = False # this is a session state in Word_Detail
