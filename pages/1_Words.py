@@ -20,7 +20,7 @@ df = db.all_words()
 
 st.write("Loading tags into DF")
 # df['Tags'] = df['id'].apply(lambda x: db.get_tags_for_word(x)) # .apply() is not very efficient given postgres syntax which returns queries 
-tags_map = db.tags_by_word()
+tags_map = db.get_word_id_to_tags_mapping()
 df["Tags"] = df["id"].map(tags_map).apply(lambda x: x or [])
 
 st.write("Running last seen")
@@ -253,7 +253,10 @@ elif mode == "🔍 View":
             print("ROW NUM:", row_id)
             word_id = df.loc[row_id,"id"]
             print("WORD ID:", word_id)
+
             st.session_state.word_id = int(word_id)
+            st.session_state.word_tags = tags_map[word_id] # This was introduced 3/26 in attempt to minimize queries
+
             st.session_state.edit_mode = False # this is a session state in Word_Detail
             st.switch_page("pages/3_Word_Detail.py") 
             # print("Success!")
