@@ -248,12 +248,12 @@ if st.session_state.confirm_submit:
     # print("Confirmed submit. Updated db.get_all_tags():", db.get_all_tags())
     
     st.write("Updating word-tagz")
-    db.update_word_tags(wid, tags)
+    db.update_word_tags(wid, tags) # optimization attempted
 
     st.write("Adding encounter")
     db.add_encounter(wid, source, example, date, encounter_notes)
     st.write("Adding charsipoos")
-    db.link_word_chars(wid, entry)
+    db.link_word_chars(wid, entry) # optimization attempted
 
     # st.success("New word added.")
     # print("NEW WORDS LIST:", db.all_words())
