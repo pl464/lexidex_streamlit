@@ -444,52 +444,28 @@ def get_or_create_char(c):
 
 # latency-optimized version by ChatGPT
 def link_word_chars(word_id, text_val):
-    chars = list(set(text_val))  # unique chars only
+    chars = list(set(text_val))
 
     with conn.session as session:
-        # 1. Fetch all existing characters at once
-        df = conn.query(
-            "SELECT id, char FROM characters WHERE char = ANY(:chars)",
-            params={"chars": chars},
-            ttl=0
-        )
-
-        existing = {row.char: row.id for row in df.itertuples(index=False)}
-
-        # 2. Find missing characters
-        missing = [c for c in chars if c not in existing]
-
-        # 3. Insert missing characters in batch
-        if missing:
-            session.execute(
-                text("""
-                    INSERT INTO characters (char, date_added, notes)
-                    VALUES (:char, :date_added, '')
-                    ON CONFLICT (char) DO NOTHING
-                """),
-                [{"char": c, "date_added": datetime.utcnow()} for c in missing]
-            )
-
-        # 4. Fetch all IDs again (now complete)
-        df = conn.query(
-            "SELECT id, char FROM characters WHERE char = ANY(:chars)",
-            params={"chars": chars},
-            ttl=0
-        )
-
-        char_map = {row.char: int(row.id) for row in df.itertuples(index=False)}
-
-        # 5. Insert word_characters in batch
         session.execute(
             text("""
+                WITH inserted AS (
+                    INSERT INTO characters (char, date_added, notes)
+                    SELECT unnest(:chars), NOW(), ''
+                    ON CONFLICT (char) DO NOTHING
+                    RETURNING id, char
+                ),
+                all_chars AS (
+                    SELECT id, char FROM characters WHERE char = ANY(:chars)
+                )
                 INSERT INTO word_characters (word_id, char_id)
-                VALUES (:word_id, :cid)
+                SELECT :word_id, id FROM all_chars
                 ON CONFLICT DO NOTHING
             """),
-            [
-                {"word_id": int(word_id), "cid": char_map[c]}
-                for c in chars
-            ]
+            {
+                "chars": chars,
+                "word_id": int(word_id)
+            }
         )
 
         session.commit()
