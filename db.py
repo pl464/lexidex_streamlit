@@ -279,9 +279,10 @@ RETURNS:
 #         tag_names.append(tag_df.iloc[0]["name"])
 #     return tag_names
 
-# more Streamlit/postgres/deployment efficiency-friendly
+# This function returns a mapping from word_id to its list of tags.
+# Compared to getting an individual tag per word, this is more Streamlit/postgres/deployment efficiency-friendly as it requires many less queries
 @st.cache_data
-def tags_by_word():
+def get_word_id_to_tags_mapping():
     df = conn.query("""
         SELECT wt.word_id, t.name
         FROM word_tags wt
