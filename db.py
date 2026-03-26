@@ -76,12 +76,13 @@ conn = st.connection("postgresql", type="sql")
 # -------------------------
 
 # ----- Word/Entries -----
-
+@st.cache_data(ttl=10)
 def get_word_by_text(text_val):
     df = conn.query("SELECT id, text, meaning, pronunciation, notes FROM words WHERE text = :text", params={"text": text_val})
     return df.iloc[0] if not df.empty else None
     # return cursor.fetchone()
 
+@st.cache_data(ttl=10)
 def get_word_by_id(word_id):
     df = conn.query(
         "SELECT id, text, meaning, pronunciation, notes FROM words WHERE id = :id",
@@ -90,7 +91,6 @@ def get_word_by_id(word_id):
     )
     return df.iloc[0] if not df.empty else None
 
-@st.cache_data
 def create_word(text_val, meaning, pron, notes):
     with conn.session as session:
         result = session.execute(
@@ -132,7 +132,7 @@ def update_word(word_id, text_val, pron, meaning, notes):
         session.commit()
 
 # ----- Encounters -----
-
+@st.cache_data(ttl=10)
 def get_encounter_by_id(encounter_id):
     df = conn.query(
         "SELECT source, example, date_added, notes FROM encounters WHERE id = :id",
@@ -140,7 +140,6 @@ def get_encounter_by_id(encounter_id):
         ttl=0
     )
     return df.iloc[0] if not df.empty else None
-
 
 def add_encounter(word_id, source, example, date, notes):
     with conn.session as session:
@@ -152,7 +151,7 @@ def add_encounter(word_id, source, example, date, notes):
         )
         session.commit()
 
-@st.cache_data
+@st.cache_data(ttl=10)
 def encounter_count(word_id):
     df = conn.query(
         "SELECT COUNT(*) AS count FROM encounters WHERE word_id = :word_id",
@@ -170,7 +169,6 @@ def encounter_counts():
     """, ttl=10)
 
     return dict(zip(df["word_id"], df["count"]))
-
 
 def update_encounter(word_id, encounter_id, source, example, date_added, encounter_notes):
     with conn.session as session:
@@ -220,40 +218,95 @@ PARAMS:
 RETURNS:
 - nothing. updates the word_tags Table (implements one-to-many relationship between word and its tags)
 '''
+# def update_word_tags(word_id, new_tags):
+#     with conn.session as session:
+#         # Delete all existing relationships
+#         session.execute(
+#             text("""
+#                 DELETE FROM word_tags 
+#                 WHERE word_id=:word_id
+#                  """),
+#             {"word_id": word_id}
+#         )
+
+#         all_tags = get_all_tags()
+
+#         for tag in new_tags:
+#             if tag not in all_tags:
+#                 # print("This tag gon be added:", tag)
+#                 add_tag(tag)
+
+#             # Get the tag's id
+#             tag_row = conn.query(
+#                 "SELECT id FROM tags WHERE name=:name",
+#                 params={"name": tag},
+#                 ttl=0
+#             )
+#             tag_id = tag_row.iloc[0]["id"]
+#             tag_id = int(tag_id) # int cast for postgres
+
+#             session.execute(
+#                 text("""
+#                     INSERT INTO word_tags (word_id, tag_id) 
+#                     VALUES (:word_id, :tag_id)
+#                     """),
+#                 {"word_id": word_id, "tag_id": tag_id}
+#             )
+
+#         session.commit()
 def update_word_tags(word_id, new_tags):
+    new_tags = list(set(new_tags))  # dedupe
+
     with conn.session as session:
-        # Delete all existing relationships
+        # 1. Delete existing relationships
         session.execute(
-            text("""
-                DELETE FROM word_tags 
-                WHERE word_id=:word_id
-                 """),
+            text("DELETE FROM word_tags WHERE word_id = :word_id"),
             {"word_id": word_id}
         )
 
-        all_tags = get_all_tags()
+        # 2. Fetch all existing tags in one query
+        df = conn.query(
+            "SELECT id, name FROM tags WHERE name = ANY(:names)",
+            params={"names": new_tags},
+            ttl=0
+        )
 
-        for tag in new_tags:
-            if tag not in all_tags:
-                print("This tag gon be added:", tag)
-                add_tag(tag)
+        existing = {row.name: int(row.id) for row in df.itertuples(index=False)}
 
-            # Get the tag's id
-            tag_row = conn.query(
-                "SELECT id FROM tags WHERE name=:name",
-                params={"name": tag},
-                ttl=0
-            )
-            tag_id = tag_row.iloc[0]["id"]
-            tag_id = int(tag_id) # int cast for postgres
+        # 3. Find missing tags
+        missing = [t for t in new_tags if t not in existing]
 
+        # 4. Insert missing tags (batch)
+        if missing:
             session.execute(
                 text("""
-                    INSERT INTO word_tags (word_id, tag_id) 
-                    VALUES (:word_id, :tag_id)
-                    """),
-                {"word_id": word_id, "tag_id": tag_id}
+                    INSERT INTO tags (name)
+                    VALUES (:name)
+                    ON CONFLICT (name) DO NOTHING
+                """),
+                [{"name": t} for t in missing]
             )
+
+        # 5. Fetch ALL tag IDs again (now complete)
+        df = conn.query(
+            "SELECT id, name FROM tags WHERE name = ANY(:names)",
+            params={"names": new_tags},
+            ttl=0
+        )
+
+        tag_map = {row.name: int(row.id) for row in df.itertuples(index=False)}
+
+        # 6. Insert relationships in batch
+        session.execute(
+            text("""
+                INSERT INTO word_tags (word_id, tag_id)
+                VALUES (:word_id, :tag_id)
+            """),
+            [
+                {"word_id": int(word_id), "tag_id": tag_map[t]}
+                for t in new_tags
+            ]
+        )
 
         session.commit()
 
@@ -281,7 +334,7 @@ RETURNS:
 
 # This function returns a mapping from word_id to its list of tags.
 # Compared to getting an individual tag per word, this is more Streamlit/postgres/deployment efficiency-friendly as it requires many less queries
-@st.cache_data
+# @st.cache_data(ttl=10)
 def get_word_id_to_tags_mapping():
     df = conn.query("""
         SELECT wt.word_id, t.name
@@ -296,7 +349,6 @@ def get_word_id_to_tags_mapping():
 
     return result
 
-@st.cache_data
 def encounter_counts():
     df = conn.query("""
         SELECT word_id, COUNT(*) AS count
@@ -359,40 +411,92 @@ def get_or_create_char(c):
             return result.lastrowid
 
 
+# def link_word_chars(word_id, text_val):
+#     with conn.session as session:
+#         for c in text_val:
+#             # cid = get_or_create_char(c)
+#             df = conn.query(
+#                 "SELECT id FROM characters WHERE char=:c",
+#                 params={"c": c},
+#                 ttl=0
+#             )
+#             if not df.empty:
+#                 cid = df.iloc[0]["id"]
+#             else:
+#                 result = session.execute(
+#                     text("""
+#                         INSERT INTO characters (char, date_added, notes) 
+#                         VALUES (:c, :date_added, '')
+#                         """),
+#                     {"c": c, "date_added": datetime.now().isoformat()}
+#                 )
+#                 session.commit()
+#                 cid = result.lastrowid
+#             cid = int(cid) # cast from numpy because postgres can only use native python types (?)
+#             session.execute(
+#                 text("""
+#                     INSERT INTO word_characters (word_id, char_id) 
+#                     VALUES (:word_id, :cid) ON CONFLICT DO NOTHING
+#                     """),
+#                 {"word_id": word_id, "cid": cid}
+#             )
+#             session.commit()
+
+# latency-optimized version by ChatGPT
 def link_word_chars(word_id, text_val):
+    chars = list(set(text_val))  # unique chars only
+
     with conn.session as session:
-        for c in text_val:
-            # cid = get_or_create_char(c)
-            df = conn.query(
-                "SELECT id FROM characters WHERE char=:c",
-                params={"c": c},
-                ttl=0
-            )
-            if not df.empty:
-                cid = df.iloc[0]["id"]
-            else:
-                result = session.execute(
-                    text("""
-                        INSERT INTO characters (char, date_added, notes) 
-                        VALUES (:c, :date_added, '')
-                        """),
-                    {"c": c, "date_added": datetime.now().isoformat()}
-                )
-                session.commit()
-                cid = result.lastrowid
-            cid = int(cid) # cast from numpy because postgres can only use native python types (?)
+        # 1. Fetch all existing characters at once
+        df = conn.query(
+            "SELECT id, char FROM characters WHERE char = ANY(:chars)",
+            params={"chars": chars},
+            ttl=0
+        )
+
+        existing = {row.char: row.id for row in df.itertuples(index=False)}
+
+        # 2. Find missing characters
+        missing = [c for c in chars if c not in existing]
+
+        # 3. Insert missing characters in batch
+        if missing:
             session.execute(
                 text("""
-                    INSERT INTO word_characters (word_id, char_id) 
-                    VALUES (:word_id, :cid) ON CONFLICT DO NOTHING
-                    """),
-                {"word_id": word_id, "cid": cid}
+                    INSERT INTO characters (char, date_added, notes)
+                    VALUES (:char, :date_added, '')
+                    ON CONFLICT (char) DO NOTHING
+                """),
+                [{"char": c, "date_added": datetime.utcnow()} for c in missing]
             )
-            session.commit()
+
+        # 4. Fetch all IDs again (now complete)
+        df = conn.query(
+            "SELECT id, char FROM characters WHERE char = ANY(:chars)",
+            params={"chars": chars},
+            ttl=0
+        )
+
+        char_map = {row.char: int(row.id) for row in df.itertuples(index=False)}
+
+        # 5. Insert word_characters in batch
+        session.execute(
+            text("""
+                INSERT INTO word_characters (word_id, char_id)
+                VALUES (:word_id, :cid)
+                ON CONFLICT DO NOTHING
+            """),
+            [
+                {"word_id": int(word_id), "cid": char_map[c]}
+                for c in chars
+            ]
+        )
+
+        session.commit()
 
 # ----- Word/Entry Queries -----
 
-@st.cache_data
+@st.cache_data(ttl=10)
 def all_words():
     df = conn.query("""
         SELECT w.id, w.text, w.meaning, w.pronunciation, 
