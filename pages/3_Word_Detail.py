@@ -26,7 +26,8 @@ df['date_added'] = df['date_added'].astype(str)
 
 word = db.word_detail(wid)
 print("Word is", word)
-tags = db.get_tags_for_word(wid)
+# tags = db.get_tags_for_word(wid)
+tags = st.session_state.get("word_tags")
 all_tags = db.get_all_tags()
 
 # ----- Session State -----
