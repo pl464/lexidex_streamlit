@@ -255,7 +255,10 @@ elif mode == "🔍 View":
             print("WORD ID:", word_id)
 
             st.session_state.word_id = word_id
-            st.session_state.word_tags = tags_map[word_id] # This was introduced 3/26 in attempt to minimize queries
+            if (tags_map[word_id]):
+                st.session_state.word_tags = tags_map[word_id] # This was introduced 3/26 in attempt to minimize queries
+            else:
+                st.session_state.word_tags = []
 
             st.session_state.edit_mode = False # this is a session state in Word_Detail
             st.switch_page("pages/3_Word_Detail.py") 
